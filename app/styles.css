@@ -13,13 +13,27 @@ p { line-height: 1.55; }
 .toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; }
 button, .button { border: 0; border-radius: 999px; padding: 10px 16px; background: #171717; color: white; cursor: pointer; text-decoration: none; display: inline-block; }
 button.secondary, .secondary-link { background: #ecece7; color: #171717; }
+button.mini { padding: 7px 11px; font-size: 12px; white-space: nowrap; }
 button:disabled { opacity: .45; cursor: default; }
 select, input { max-width: 100%; padding: 10px 14px; border: 1px solid #d9d9d3; border-radius: 999px; background: white; }
 .url-row { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 10px; margin-top: 14px; }
 .url-row input { width: 100%; }
+.status { margin: 12px 0 0; font-size: 13px; color: #4d4d48; }
+.issue { display: grid; gap: 8px; margin-top: 14px; padding: 14px; border: 1px solid #e1c5bd; border-radius: 14px; background: #fff7f4; font-size: 13px; }
+.issue strong { font-size: 14px; }
+.issue span { color: #5f514d; }
+.issue code { color: #7a6a65; font-size: 11px; word-break: break-all; }
+.issue details { margin-top: 2px; }
+.issue pre { margin: 8px 0 0; }
+.issue button { justify-self: start; margin-top: 2px; }
 .results-head { display: flex; justify-content: space-between; gap: 20px; align-items: flex-start; }
 .results-head p { margin: 0; }
 .selection-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; border-top: 1px solid #ecece7; margin-top: 18px; padding-top: 14px; }
+.suggestions ol { list-style: decimal; padding-left: 22px; margin: 16px 0 0; display: grid; gap: 10px; }
+.suggestions li { padding-left: 4px; }
+.suggestions li::marker { color: #8b8b84; font-size: 12px; }
+.suggestions li { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 12px; align-items: center; border-bottom: 1px solid #efefe9; padding-bottom: 10px; }
+.suggestions li:last-child { border-bottom: 0; padding-bottom: 0; }
 .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 16px; margin-top: 20px; }
 .card { background: white; border: 1px solid #e5e5df; border-radius: 16px; overflow: hidden; position: relative; }
 .card.selectable { cursor: pointer; transition: transform .15s ease, border-color .15s ease, box-shadow .15s ease; }
@@ -42,4 +56,6 @@ pre { white-space: pre-wrap; word-break: break-word; font-size: 12px; background
   main { padding: 32px 16px 60px; }
   .url-row { grid-template-columns: 1fr; }
   .results-head { flex-direction: column; }
+  .suggestions li { grid-template-columns: 1fr; }
+  .suggestions li button { justify-self: start; }
 }
