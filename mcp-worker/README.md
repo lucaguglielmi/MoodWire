@@ -17,6 +17,7 @@ The server uses Cloudflare Agents SDK `createMcpHandler()` and MCP SDK v2.
 - `get_pinterest_pin` — returns one normalised Pin.
 - `search_pinterest_board` — text-searches Pin titles/descriptions after retrieving a board.
 - `load_reference_images` — fetches and returns actual image bytes for up to eight Pin IDs as MCP image content. This is the important bridge from “metadata about a reference” to “the model can actually see the reference.”
+- `load_pinterest_image_url` — loads an already-resolved `i.pinimg.com` image directly as MCP image content.
 
 For video Pins, the current implementation loads a static image/poster rendition when Pinterest exposes one. Actual temporal frame extraction is a later media-worker concern.
 
