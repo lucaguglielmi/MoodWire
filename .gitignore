@@ -1,4 +1,8 @@
 node_modules
 .next
 .env.local
+.dev.vars
+.wrangler
+mcp-worker/.dev.vars
+mcp-worker/.wrangler
 .DS_Store
