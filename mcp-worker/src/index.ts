@@ -51,6 +51,15 @@ async function resolveReference(url: string, token: string, limit = 100) {
   throw new Error("Pinterest URL was recognised but its resource type could not be determined");
 }
 
+function assertPinimgUrl(value: string) {
+  const url = new URL(value);
+  const host = url.hostname.toLowerCase();
+  if (host !== "i.pinimg.com" && !host.endsWith(".pinimg.com")) {
+    throw new Error("Only Pinterest pinimg media URLs can be loaded directly");
+  }
+  return url.toString();
+}
+
 function createServer(env: Env) {
   const token = requireToken(env);
   const server = new McpServer({ name: "MoodWire", version: "0.1.0" });
@@ -152,6 +161,23 @@ function createServer(env: Env) {
       if (!content.length) content.push(jsonText({ loaded }));
       else content.push(jsonText({ summary: loaded.map(({ pin, image_url, error }) => ({ reference_id: `mw:pin:${pin.id}`, image_url, error })) }));
       return { content };
+    },
+  );
+
+  server.registerTool(
+    "load_pinterest_image_url",
+    {
+      description: "Load a direct i.pinimg.com image URL as actual MCP image content. Use this after resolving a direct Pinterest media URL when the media is an image or GIF.",
+      inputSchema: { url: z.string().url() },
+    },
+    async ({ url }) => {
+      const safeUrl = assertPinimgUrl(url);
+      return {
+        content: [
+          jsonText({ reference_id: `mw:media:${safeUrl}`, source_url: safeUrl }),
+          await fetchImageAsMcpContent(safeUrl),
+        ],
+      };
     },
   );
 
