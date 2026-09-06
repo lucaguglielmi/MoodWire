@@ -13,6 +13,24 @@ The current repository contains the initial Next.js proof of concept. It can:
 
 The target product is not a Pinterest clone or moodboard UI. MoodWire should become an MCP/App connector that ChatGPT and other compatible agents can call when a user wants to use a curated board as visual context. Pinterest remains the source of truth.
 
+## Hosting direction
+
+MoodWire is **Cloudflare-first**.
+
+The target runtime is Cloudflare Workers, with a stateless Streamable HTTP MCP endpoint at `/mcp`. The existing Next.js 16 PoC should be migrated using Cloudflare's recommended `vinext` path after running its compatibility check.
+
+Use Cloudflare services incrementally:
+
+- Workers — web app, OAuth, Pinterest adapter and MCP endpoint;
+- D1 — encrypted Pinterest connection/account metadata when multi-user persistence is added;
+- R2 — derived animation frames only when needed;
+- KV — optional non-authoritative cache data;
+- Queues / Workflows — asynchronous processing only when required.
+
+Google Cloud Run is reserved as an escape hatch for ffmpeg or other heavy/native media workloads rather than as a second general application platform.
+
+See [`docs/SERVER_HOSTING_SPEC.md`](docs/SERVER_HOSTING_SPEC.md) for the architecture source of truth.
+
 ## Local setup
 
 1. Create a Pinterest developer app and request `boards:read` and `pins:read`.
@@ -30,10 +48,6 @@ Optional: set `OPENAI_API_KEY` to enable the current Visual DNA experiment. This
 ## Current test board
 
 The PoC automatically selects **CSS animation reference** when that board exists in the authenticated Pinterest account.
-
-## Architecture / hosting
-
-See [`docs/SERVER_HOSTING_SPEC.md`](docs/SERVER_HOSTING_SPEC.md).
 
 ## Security
 
