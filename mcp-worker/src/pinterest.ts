@@ -274,7 +274,7 @@ export async function resolvePinterestUrl(value: string): Promise<PinterestRefer
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 6_000);
   try {
-    const response = await fetch(parsed.url, { redirect: "follow", headers: { "User-Agent": "MoodWire/0.1" }, signal: controller.signal });
+    const response = await fetch(parsed.url, { redirect: "follow", headers: { "User-Agent": "MoodWire/0.2" }, signal: controller.signal });
     if (!response.ok) throw new Error(`Pinterest short link could not be resolved (${response.status})`);
     return parsePinterestUrl(response.url);
   } catch (error) {

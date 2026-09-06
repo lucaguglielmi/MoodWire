@@ -4,6 +4,7 @@ import { z } from "zod";
 import {
   PinterestApiError,
   bestImageUrl,
+  classifyMedia,
   fetchImageAsMcpContent,
   getPin,
   listBoardPins,
@@ -29,6 +30,8 @@ function suggestionsFor(kind: "pin" | "board" | "media") {
   if (kind === "board") {
     return [
       { label: "Choose references", prompt: "Show me the strongest references from this board and help me choose a small set." },
+      { label: "See more from this board", prompt: "Show me more Pins from this board so I can pick additional references." },
+      { label: "Compare shortlisted references", prompt: "Compare the references I select and tell me what they share and how they differ." },
       { label: "Create an original image", prompt: "Use selected references for broad visual direction and create a new original image." },
       { label: "Create a 3D asset brief", prompt: "Use selected references to define silhouette, materials, proportions and surface language for an original 3D asset." },
       { label: "Plan an animated identity", prompt: "Use the motion and composition cues in selected references to propose an original animated logo direction." },
@@ -36,7 +39,7 @@ function suggestionsFor(kind: "pin" | "board" | "media") {
   }
   return [
     { label: "Use as image reference", prompt: "Use this reference as visual direction for a new original image without copying it." },
-    { label: "Describe useful visual traits", prompt: "Analyse this reference for composition, material, lighting, typography, shape and motion cues." },
+    { label: "Analyse typography, composition and colour", prompt: "Analyse this reference for composition, material, lighting, typography, shape and motion cues." },
     { label: "Create a 3D asset brief", prompt: "Turn the useful traits from this reference into an original 3D asset brief." },
     { label: "Compare with another reference", prompt: "Keep this reference loaded and compare it with another Pinterest reference I provide." },
   ];
@@ -108,7 +111,7 @@ async function resolveReference(url: string, token: string, limit = 48) {
   }
 
   if (reference.kind === "media") {
-    return { kind: "media" as const, requested_url: url, resolved_url: reference.url, media: [{ url: reference.url }], suggestions: suggestionsFor("media") };
+    return { kind: "media" as const, requested_url: url, resolved_url: reference.url, media: [{ url: reference.url, type: classifyMedia(reference.url) }], suggestions: suggestionsFor("media") };
   }
 
   if (reference.kind === "board") {
@@ -135,7 +138,6 @@ function assertPinimgUrl(value: string) {
 }
 
 function createServer(env: Env, requestId: string) {
-  const token = requireToken(env);
   const server = new McpServer({ name: "MoodWire", version: "0.2.0" });
 
   server.registerTool(
@@ -143,14 +145,19 @@ function createServer(env: Env, requestId: string) {
     {
       description: "Resolve a Pinterest Pin, board, pin.it short link, or direct pinimg media URL. Returns visual metadata plus suggested next actions. Board previews default to 48 items for faster first response.",
       inputSchema: { url: z.string().url(), limit: z.number().int().min(1).max(500).optional() },
+      annotations: { title: "Resolve Pinterest reference", readOnlyHint: true, openWorldHint: true },
     },
-    async ({ url, limit }) => runTool("resolve_pinterest_reference", requestId, async () => ({ content: [jsonText(await resolveReference(url, token, limit ?? 48))] })),
+    async ({ url, limit }) => runTool("resolve_pinterest_reference", requestId, async () => ({ content: [jsonText(await resolveReference(url, requireToken(env), limit ?? 48))] })),
   );
 
   server.registerTool(
     "list_pinterest_boards",
-    { description: "List boards from the Pinterest account connected to MoodWire. Warm Worker instances cache board lists briefly for faster repeated retrieval.", inputSchema: { limit: z.number().int().min(1).max(1000).optional() } },
-    async ({ limit }) => runTool("list_pinterest_boards", requestId, async () => ({ content: [jsonText({ boards: await listBoards(token, limit ?? 250) })] })),
+    {
+      description: "List boards from the Pinterest account connected to MoodWire. Warm Worker instances cache board lists briefly for faster repeated retrieval.",
+      inputSchema: { limit: z.number().int().min(1).max(1000).optional() },
+      annotations: { title: "List Pinterest boards", readOnlyHint: true, openWorldHint: true },
+    },
+    async ({ limit }) => runTool("list_pinterest_boards", requestId, async () => ({ content: [jsonText({ boards: await listBoards(requireToken(env), limit ?? 250) })] })),
   );
 
   server.registerTool(
@@ -158,17 +165,22 @@ function createServer(env: Env, requestId: string) {
     {
       description: "Get normalised image, GIF, video, stream and source URLs for Pins in one Pinterest board.",
       inputSchema: { board_id: z.string().min(1), limit: z.number().int().min(1).max(500).optional() },
+      annotations: { title: "Get Pinterest board media", readOnlyHint: true, openWorldHint: true },
     },
     async ({ board_id, limit }) => runTool("get_pinterest_board_media", requestId, async () => {
-      const pins = (await listBoardPins(board_id, token, limit ?? 48)).map(normalisePin);
+      const pins = (await listBoardPins(board_id, requireToken(env), limit ?? 48)).map(normalisePin);
       return { content: [jsonText({ board_id, pins, suggestions: suggestionsFor("board") })] };
     }),
   );
 
   server.registerTool(
     "get_pinterest_pin",
-    { description: "Get one Pinterest Pin and all visual media URLs MoodWire can discover for it.", inputSchema: { pin_id: z.string().regex(/^\d+$/) } },
-    async ({ pin_id }) => runTool("get_pinterest_pin", requestId, async () => ({ content: [jsonText({ pin: normalisePin(await getPin(pin_id, token)), suggestions: suggestionsFor("pin") })] })),
+    {
+      description: "Get one Pinterest Pin and all visual media URLs MoodWire can discover for it.",
+      inputSchema: { pin_id: z.string().regex(/^\d+$/) },
+      annotations: { title: "Get Pinterest pin", readOnlyHint: true, openWorldHint: true },
+    },
+    async ({ pin_id }) => runTool("get_pinterest_pin", requestId, async () => ({ content: [jsonText({ pin: normalisePin(await getPin(pin_id, requireToken(env))), suggestions: suggestionsFor("pin") })] })),
   );
 
   server.registerTool(
@@ -176,10 +188,11 @@ function createServer(env: Env, requestId: string) {
     {
       description: "Search Pin titles and descriptions within a board. Useful for narrowing a large visual-reference board before loading images.",
       inputSchema: { board_id: z.string().min(1), query: z.string().min(1), scan_limit: z.number().int().min(1).max(500).optional(), result_limit: z.number().int().min(1).max(50).optional() },
+      annotations: { title: "Search Pinterest board", readOnlyHint: true, openWorldHint: true },
     },
     async ({ board_id, query, scan_limit, result_limit }) => runTool("search_pinterest_board", requestId, async () => {
       const q = query.trim().toLowerCase();
-      const pins = (await listBoardPins(board_id, token, scan_limit ?? 200)).map(normalisePin).filter((pin) => `${pin.title ?? ""} ${pin.description ?? ""}`.toLowerCase().includes(q)).slice(0, result_limit ?? 25);
+      const pins = (await listBoardPins(board_id, requireToken(env), scan_limit ?? 200)).map(normalisePin).filter((pin) => `${pin.title ?? ""} ${pin.description ?? ""}`.toLowerCase().includes(q)).slice(0, result_limit ?? 25);
       return { content: [jsonText({ board_id, query, pins })] };
     }),
   );
@@ -189,8 +202,10 @@ function createServer(env: Env, requestId: string) {
     {
       description: "Load the actual pixels for up to 8 Pinterest Pins into MCP image content. Images are fetched in parallel. Video Pins use an available static/poster rendition until temporal frame extraction is enabled.",
       inputSchema: { pin_ids: z.array(z.string().regex(/^\d+$/)).min(1).max(8) },
+      annotations: { title: "Load Pinterest reference images", readOnlyHint: true, openWorldHint: true },
     },
     async ({ pin_ids }) => runTool("load_reference_images", requestId, async () => {
+      const token = requireToken(env);
       const uniqueIds = [...new Set(pin_ids)];
       const results = await Promise.all(uniqueIds.map(async (pinId) => {
         try {
@@ -228,6 +243,7 @@ function createServer(env: Env, requestId: string) {
     {
       description: "Load a direct i.pinimg.com image URL as actual MCP image content and return suggested next creative actions.",
       inputSchema: { url: z.string().url() },
+      annotations: { title: "Load Pinterest image URL", readOnlyHint: true, openWorldHint: true },
     },
     async ({ url }) => runTool("load_pinterest_image_url", requestId, async () => {
       const safeUrl = assertPinimgUrl(url);

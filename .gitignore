@@ -6,3 +6,6 @@ node_modules
 mcp-worker/.dev.vars
 mcp-worker/.wrangler
 .DS_Store
+package-lock.json
+mcp-worker/package-lock.json
+*.tsbuildinfo
