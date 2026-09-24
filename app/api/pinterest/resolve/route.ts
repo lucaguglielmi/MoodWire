@@ -84,8 +84,8 @@ function normalisePin(pin: PinterestPin) {
 
 function suggestions(kind: "pin" | "board" | "media") {
   return kind === "board"
-    ? ["Choose the strongest references", "Create an original image from selected references", "Create a 3D asset brief", "Plan an animated logo direction"]
-    : ["Use this as an image reference", "Describe its useful visual traits", "Create a 3D asset brief", "Compare it with another reference"];
+    ? ["Choose the strongest references", "See more from this board", "Compare shortlisted references", "Discuss the visual style"]
+    : ["Keep as a reference", "Describe its useful visual traits", "Compare it with another reference"];
 }
 
 export async function POST(request: NextRequest) {

@@ -1,17 +1,18 @@
 # MoodWire
 
-MoodWire is a read-only visual-reference connector for AI. The first integration is Pinterest.
+MoodWire is a personal experiment: a read-only way to browse my own Pinterest boards and Pins from inside an AI assistant conversation, instead of switching back and forth to the Pinterest app.
 
-The product goal is deliberately simple: paste a Pinterest board, Pin, short link or direct Pinterest media URL into an AI conversation, retrieve the real visual references, select the ones that matter, and use them to inform a new original asset.
+The goal is deliberately simple: paste a Pinterest board, Pin, short link or direct Pinterest media URL into an AI conversation and retrieve the real visual references — the images themselves, not just a text description of them.
 
 Examples include:
 
-- generating a new image from several visual references;
-- using selected references to define a 3D game asset or environment direction;
-- studying typography, palette, composition or material treatment;
-- using animation/video references to inform a motion system or animated logo.
+- browsing a project board without leaving the conversation;
+- looking closely at a specific Pin's image or video;
+- studying typography, palette, composition or material treatment.
 
-Pinterest remains the source of truth. MoodWire retrieves and normalises references; the calling AI interprets them.
+Pinterest remains the source of truth. MoodWire only retrieves and normalises what's already on the connected account's own boards; it does not modify, repost, or store Pinterest content anywhere.
+
+This is a single-user, personal-use project — not a public product or service.
 
 ## What is implemented
 
@@ -27,8 +28,7 @@ The web PoC can:
 - paste and resolve board URLs, individual Pin URLs, `pin.it` short links and direct `pinimg` media URLs;
 - surface image, GIF, video and stream URLs;
 - render exposed images/videos;
-- select multiple references and copy a stable reference manifest;
-- optionally run the earlier server-side visual-analysis experiment.
+- select multiple references and copy a stable reference manifest.
 
 ### Cloudflare MCP Worker
 
@@ -65,7 +65,7 @@ load_reference_images(selected Pin IDs)
      ↓
 actual image pixels enter model context
      ↓
-create an original image / 3D direction / motion concept
+the AI conversation continues with those references visible
 ```
 
 Stable IDs use forms such as `mw:pin:123456789` so a user-facing gallery can show simple numbers while the AI retains exact source identity.

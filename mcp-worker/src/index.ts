@@ -30,17 +30,14 @@ function suggestionsFor(kind: "pin" | "board" | "media") {
   if (kind === "board") {
     return [
       { label: "Choose references", prompt: "Show me the strongest references from this board and help me choose a small set." },
-      { label: "See more from this board", prompt: "Show me more Pins from this board so I can pick additional references." },
+      { label: "See more from this board", prompt: "Show me more Pins from this board so I can look through more of it." },
       { label: "Compare shortlisted references", prompt: "Compare the references I select and tell me what they share and how they differ." },
-      { label: "Create an original image", prompt: "Use selected references for broad visual direction and create a new original image." },
-      { label: "Create a 3D asset brief", prompt: "Use selected references to define silhouette, materials, proportions and surface language for an original 3D asset." },
-      { label: "Plan an animated identity", prompt: "Use the motion and composition cues in selected references to propose an original animated logo direction." },
+      { label: "Discuss the visual style", prompt: "Tell me what stands out about the visual style across these references — composition, colour, typography, material." },
     ];
   }
   return [
-    { label: "Use as image reference", prompt: "Use this reference as visual direction for a new original image without copying it." },
+    { label: "Keep as a reference", prompt: "Keep this reference in mind for the rest of our conversation." },
     { label: "Analyse typography, composition and colour", prompt: "Analyse this reference for composition, material, lighting, typography, shape and motion cues." },
-    { label: "Create a 3D asset brief", prompt: "Turn the useful traits from this reference into an original 3D asset brief." },
     { label: "Compare with another reference", prompt: "Keep this reference loaded and compare it with another Pinterest reference I provide." },
   ];
 }

@@ -25,7 +25,6 @@ Updated: 2026-09-06
 - Select one or more references.
 - Stable reference IDs (`mw:pin:{id}`).
 - Copy a selected reference manifest for debugging/interoperability.
-- Optional legacy Visual DNA experiment remains available but is not part of the core architecture.
 
 ### MCP server
 
@@ -109,6 +108,6 @@ The private V1 demo is complete when all of the following are true:
 3. MCP Inspector can connect to `/mcp`.
 4. A pasted board or Pin URL resolves through `resolve_pinterest_reference`.
 5. `load_reference_images` returns visible/model-readable image content for selected Pin IDs.
-6. An MCP-capable AI can use those images to reason about a new, original creative asset.
+6. An MCP-capable AI can see and discuss those images directly in the conversation.
 
 The remaining blockers for that demo are deployment credentials/account access, not missing core retrieval code.

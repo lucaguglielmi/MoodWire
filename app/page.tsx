@@ -16,10 +16,10 @@ type ResolvePin = {
 };
 
 const DEFAULT_SUGGESTIONS = [
-  "Use the selected references to create an original image without copying any one source.",
-  "Analyse the selected references for composition, material, lighting, typography, shape and motion cues.",
-  "Turn the selected references into an original 3D asset brief for a game.",
-  "Use the selected references to propose an original animated logo direction.",
+  "Choose the strongest references",
+  "See more from this board",
+  "Compare shortlisted references",
+  "Discuss the visual style",
 ];
 
 function fromResolvedPin(pin: ResolvePin): Pin {
@@ -41,7 +41,6 @@ export default function Home() {
   const [issue, setIssue] = useState<Issue | null>(null);
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState("");
-  const [analysis, setAnalysis] = useState("");
   const [copied, setCopied] = useState(false);
   const [suggestions, setSuggestions] = useState<string[]>(DEFAULT_SUGGESTIONS);
   const [copiedSuggestion, setCopiedSuggestion] = useState<number | null>(null);
@@ -75,7 +74,7 @@ export default function Home() {
 
   async function loadPins() {
     if (!boardId) return;
-    setLoading(true); setIssue(null); setAnalysis(""); setSelected(new Set()); setStatus("Fetching board preview…");
+    setLoading(true); setIssue(null); setSelected(new Set()); setStatus("Fetching board preview…");
     try {
       const started = performance.now();
       const r = await fetch(`/api/pinterest/pins?boardId=${encodeURIComponent(boardId)}`);
@@ -93,7 +92,7 @@ export default function Home() {
 
   async function resolveUrl() {
     if (!referenceUrl.trim()) return;
-    setLoading(true); setIssue(null); setAnalysis(""); setSelected(new Set()); setStatus("Resolving Pinterest reference…");
+    setLoading(true); setIssue(null); setSelected(new Set()); setStatus("Resolving Pinterest reference…");
     try {
       const started = performance.now();
       const r = await fetch("/api/pinterest/resolve", {
@@ -166,24 +165,6 @@ export default function Home() {
     window.setTimeout(() => setCopiedSuggestion(null), 1500);
   }
 
-  async function analyse() {
-    setLoading(true); setIssue(null); setStatus("Analysing selected references…");
-    try {
-      const source = selectedPins.length ? selectedPins : pins;
-      const urls = source.flatMap((p) => p._media ?? []).filter((m) => m.kind === "image" || m.kind === "gif").map((m) => m.url);
-      const unique = [...new Set(urls)].slice(0, 20);
-      if (!unique.length) throw { user_message: "No static image or poster is available for the selected references.", retryable: false, action: "Choose another reference or wait for video frame extraction support." } satisfies Issue;
-      const r = await fetch("/api/analyse", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ imageUrls: unique, boardName: resolvedLabel || selectedBoard?.name }) });
-      const data = await r.json();
-      if (!r.ok) throw issueFromResponse(data, "Reference analysis failed");
-      setAnalysis(data.analysis ?? "");
-      setStatus(`Analysed ${unique.length} visual reference${unique.length === 1 ? "" : "s"}.`);
-    } catch (e) {
-      setIssue(typeof e === "object" && e && "user_message" in e ? e as Issue : { user_message: e instanceof Error ? e.message : String(e), retryable: true });
-      setStatus("");
-    } finally { setLoading(false); }
-  }
-
   useEffect(() => { void loadBoards(true); }, []);
 
   return (
@@ -217,15 +198,13 @@ export default function Home() {
       {pins.length > 0 && <>
         <section className="panel">
           <div className="results-head">
-            <div><h2>{resolvedLabel || "References"}</h2><p className="muted">Select the references you want to carry into the next creative task.</p></div>
+            <div><h2>{resolvedLabel || "References"}</h2><p className="muted">Select the references you want to carry into the conversation.</p></div>
             <div className="toolbar"><span className="badge">{stats.pins} pins</span><span className="badge">{stats.images} images</span><span className="badge">{stats.gifs} GIFs</span><span className="badge">{stats.videos} video/streams</span></div>
           </div>
-          {selected.size > 0 && <div className="selection-bar"><strong>{selected.size} selected</strong><button className="secondary" onClick={copyManifest}>{copied ? "Copied" : "Copy reference manifest"}</button><button onClick={analyse} disabled={loading}>Analyse selected</button><button className="secondary" onClick={() => setSelected(new Set())}>Clear</button></div>}
+          {selected.size > 0 && <div className="selection-bar"><strong>{selected.size} selected</strong><button className="secondary" onClick={copyManifest}>{copied ? "Copied" : "Copy reference manifest"}</button><button className="secondary" onClick={() => setSelected(new Set())}>Clear</button></div>}
         </section>
 
         {selected.size > 0 && <section className="panel suggestions"><h2>Suggested next actions</h2><p className="muted small">MoodWire keeps these as prompts rather than deciding what the references mean for you.</p><ol>{suggestions.map((text, index) => <li key={`${text}-${index}`}><span>{text}</span><button className="secondary mini" onClick={() => void copySuggestion(text, index)}>{copiedSuggestion === index ? "Copied" : "Copy prompt"}</button></li>)}</ol></section>}
-
-        {analysis && <section className="panel"><h2>Reference analysis</h2><div className="analysis">{analysis}</div></section>}
 
         <div className="grid">
           {pins.map((pin, index) => {

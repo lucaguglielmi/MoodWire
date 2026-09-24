@@ -1,23 +1,19 @@
 # MoodWire Reference Ingestion Specification
 
-Status: **V1 product contract**
+Status: **personal experiment, single-user**
 
 ## Product goal
 
-MoodWire turns Pinterest into visual memory for AI.
+MoodWire is a personal experiment that lets a Pinterest board or Pin be browsed from inside an AI conversation.
 
 A user should be able to:
 
-1. paste a Pinterest board, Pin, image or short `pin.it` link into ChatGPT;
-2. have MoodWire identify the resource and retrieve the underlying visual references using the user's authenticated Pinterest connection;
+1. paste a Pinterest board, Pin, image or short `pin.it` link into an AI conversation;
+2. have MoodWire identify the resource and retrieve the underlying visual references using the user's own authenticated Pinterest connection;
 3. inspect and select one or more references in the conversation;
-4. use those references as input for a new creative task such as:
-   - generating an original image;
-   - defining a 3D asset or environment style;
-   - designing a logo or animated identity;
-   - extracting composition, typography, palette, material, motion or interaction cues.
+4. keep talking about those references — asking questions about them, comparing them, or discussing what stands out.
 
-MoodWire must remain a retrieval and normalisation layer. The calling model is responsible for interpretation and creation.
+MoodWire is only a retrieval and normalisation layer. It does not interpret, transform, or generate anything from Pinterest content itself — whatever happens with the retrieved references is between the user and the AI assistant they're using.
 
 ## Primary interaction
 
@@ -25,21 +21,20 @@ The target experience is intentionally simple:
 
 ```text
 User:
-Use this as reference:
+Take a look at this board:
 https://www.pinterest.com/.../some-board/
 
-ChatGPT -> MoodWire:
+AI assistant -> MoodWire:
 resolve_reference(url)
 
-MoodWire -> ChatGPT:
+MoodWire -> AI assistant:
 board metadata + visual assets + stable reference IDs
 
-ChatGPT:
+AI assistant:
 Displays a browsable set of references and asks/infers which ones matter.
 
 User:
-Use 2, 5 and 7. Keep the material language from 2, the silhouette from 5,
-and the motion rhythm from 7. Make an original asset for my game.
+Show me 2, 5 and 7 in more detail.
 ```
 
 A direct Pin link should skip the board-selection step.
@@ -139,57 +134,24 @@ The gallery is not a permanent moodboard editor. It is a temporary selection sur
 
 When the user selects references, the model should request only those full-resolution assets rather than repeatedly moving the entire board through context.
 
-## Image generation workflow
+## What happens after retrieval
 
-For an image reference, the preferred path is:
+Once a reference is retrieved, MoodWire's job is done. It does not pre-compute any analysis or "Visual DNA" of a reference by default — the same image might matter to the user for entirely different reasons on different days (colour, composition, typography, material, or nothing analytical at all, just wanting to see it again). Whatever use the user and their AI assistant make of a retrieved reference happens entirely within their own conversation, outside MoodWire.
 
-```text
-Pinterest Pin
-   -> MoodWire normalised image URL
-   -> model/creative tool receives image reference
-   -> original generated asset
-```
+## Video and animated Pins
 
-MoodWire should not pre-compute a generic "Visual DNA" by default. The same reference may be used for completely different questions: colour, composition, character silhouette, UI treatment, typography, material, lighting or motion.
-
-## 3D asset workflow
-
-Pinterest references can be used as visual direction even when the output is not an image.
-
-Example:
-
-```text
-3 selected creature references
-   -> ChatGPT analyses silhouette / proportions / material / surface language
-   -> produces an original 3D asset brief or Three.js implementation direction
-```
-
-MoodWire does not need to generate 3D geometry itself. Its role is to reliably get the references into model context.
-
-## Animation and video workflow
-
-Pinterest supports video Pins, but API access to direct `video_url` is restricted for some apps/accounts. Therefore V1 must not depend on direct video URLs always being available.
+Pinterest supports video Pins, but API access to direct `video_url` is restricted for some apps/accounts, so V1 must not depend on direct video URLs always being available.
 
 When a usable video or GIF is available:
 
 ```text
 video
   -> poster
-  -> representative frames
-  -> optional contact sheet
+  -> representative frames (if extraction is added)
   -> direct video URL where permitted
 ```
 
-For visual reasoning, representative frames are the reliable baseline. Recommended default: 6 frames sampled across the duration.
-
-For motion-sensitive requests such as animated-logo direction, also expose metadata where possible:
-
-- duration;
-- looping behaviour;
-- dimensions/aspect ratio;
-- representative frame timestamps.
-
-Later, motion analysis may add optical-flow or temporal summaries, but this is not necessary for the first usable version.
+For now, a static poster/thumbnail rendition is the reliable baseline. If representative-frame sampling is added later, useful accompanying metadata includes duration, looping behaviour, and dimensions/aspect ratio.
 
 ## Gallery UX
 
@@ -251,18 +213,16 @@ Known Pinterest limitation: direct video URLs can be unavailable unless the Pint
 
 Board URL resolution in V1 is guaranteed for boards discoverable through the authenticated user's board list. Arbitrary third-party board URLs may require a later public-resource resolution strategy if Pinterest's API does not expose a supported lookup path.
 
-## Originality principle
+## Scope boundary
 
-References are input to a creative transformation, not instructions to reproduce a source work.
-
-When creating a new asset, the model should combine broader characteristics across references and the user's explicit requirements rather than copying a distinctive source composition or asset.
+MoodWire's responsibility ends at handing back an accurate, unmodified copy of what Pinterest already returns for the connected account's own content, with a clear link back to the source Pin. It does not analyse, transform, remix, or reproduce Pinterest content as a new work in its own right.
 
 ## V1 success criterion
 
 The key end-to-end demo should work as follows:
 
 ```text
-User pastes a Pinterest board or Pin link in ChatGPT
+User pastes a Pinterest board or Pin link into the AI conversation
         ↓
 MoodWire resolves it
         ↓
@@ -270,11 +230,7 @@ Actual images / video posters appear in the conversation
         ↓
 User selects one or more
         ↓
-ChatGPT can visually inspect the selected references
-        ↓
-User asks for a new image, 3D asset direction or animated-logo concept
-        ↓
-The new output is informed by those references
+The AI assistant can visually inspect the selected references
 ```
 
 That is the core product. Everything else is secondary.
